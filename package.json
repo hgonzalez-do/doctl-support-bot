@@ -1,0 +1,15 @@
+{
+  "name": "doctl-support-bot",
+  "version": "1.0.0",
+  "description": "Support chatbot for doctl: Gradient Knowledge Base retrieval + DigitalOcean Serverless Inference. Node stdlib only.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --env-file=.env server.js"
+  },
+  "license": "MIT"
+}

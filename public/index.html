@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>doctl Support Bot</title>
+  <style>
+    :root { --bg:#0b1220; --panel:#111a2e; --line:#1f2b46; --text:#e6ecf7; --muted:#8fa0c2; --accent:#0069ff; --accent2:#31c48d; }
+    * { box-sizing: border-box; }
+    body { margin:0; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); }
+    header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--line); }
+    header h1 { font-size:18px; margin:0; font-weight:600; }
+    header .meta { color:var(--muted); font-size:13px; }
+    header .meta b { color:var(--accent2); font-weight:600; }
+    main { max-width: 880px; margin: 0 auto; padding: 24px; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .chip { background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; }
+    .chip:hover { border-color:var(--accent); }
+    #log { display:flex; flex-direction:column; gap:12px; min-height: 200px; }
+    .msg { padding:14px 16px; border-radius:12px; max-width: 85%; white-space:pre-wrap; word-wrap:break-word; }
+    .user { align-self:flex-end; background:var(--accent); color:#fff; }
+    .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
+    .bot .sources { margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:12px; color:var(--muted); }
+    .bot .sources span { display:inline-block; background:#0e1730; border:1px solid var(--line); border-radius:6px; padding:2px 8px; margin:2px 4px 2px 0; }
+    .bot .timing { margin-top:6px; font-size:11px; color:var(--muted); }
+    .err { border-color:#d14343; color:#ffb4b4; }
+    form { display:flex; gap:8px; margin-top:20px; }
+    input { flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:15px; }
+    button { padding:12px 18px; border-radius:10px; border:0; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:default; }
+    footer { text-align:center; color:var(--muted); font-size:12px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>doctl Support Bot</h1>
+    <div class="meta" id="meta">loading…</div>
+  </header>
+  <main>
+    <div class="chips" id="chips">
+      <button class="chip">What changed in the latest doctl release?</button>
+      <button class="chip">Which doctl version added simulation commands?</button>
+      <button class="chip">Was the database resize --wait issue fixed?</button>
+      <button class="chip">List the last three doctl releases with dates.</button>
+    </div>
+    <div id="log"></div>
+    <form id="form">
+      <input id="q" placeholder="Ask about doctl releases and features…" autocomplete="off" />
+      <button id="send" type="submit">Ask</button>
+    </form>
+  </main>
+  <footer>Knowledge: Gradient Knowledge Base · Model: DigitalOcean Serverless Inference · Curated weekly by a Managed Agent</footer>
+
+  <script>
+    const log = document.getElementById("log");
+    const form = document.getElementById("form");
+    const q = document.getElementById("q");
+    const send = document.getElementById("send");
+    const history = [];
+
+    function add(role, text, extra) {
+      const el = document.createElement("div");
+      el.className = "msg " + role + (extra && extra.error ? " err" : "");
+      el.textContent = text;
+      if (extra && extra.sources && extra.sources.length) {
+        const s = document.createElement("div");
+        s.className = "sources";
+        s.append("Sources: ");
+        extra.sources.forEach(src => { const b = document.createElement("span"); b.textContent = src.item_name; b.title = src.snippet; s.appendChild(b); });
+        el.appendChild(s);
+      }
+      if (extra && extra.timing_ms) {
+        const t = document.createElement("div");
+        t.className = "timing";
+        t.textContent = `${extra.model} · retrieve ${extra.timing_ms.retrieve} ms · total ${extra.timing_ms.total} ms`;
+        el.appendChild(t);
+      }
+      log.appendChild(el);
+      el.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    async function ask(message) {
+      add("user", message);
+      send.disabled = true; q.value = "";
+      try {
+        const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history }) });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || r.statusText);
+        add("bot", data.answer, data);
+        history.push({ role: "user", content: message }, { role: "assistant", content: data.answer });
+      } catch (e) {
+        add("bot", "Error: " + e.message, { error: true });
+      } finally {
+        send.disabled = false; q.focus();
+      }
+    }
+
+    form.addEventListener("submit", e => { e.preventDefault(); if (q.value.trim()) ask(q.value.trim()); });
+    document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => ask(c.textContent)));
+
+    (async () => {
+      const meta = document.getElementById("meta");
+      try {
+        const [h, rel] = await Promise.all([fetch("/api/health").then(r => r.json()), fetch("/api/releases").then(r => r.ok ? r.json() : null)]);
+        const latest = rel && rel.latest ? `docs current through <b>${rel.latest}</b>` : "no release index";
+        meta.innerHTML = `${latest} · model <b>${h.model}</b>`;
+      } catch { meta.textContent = "status unavailable"; }
+    })();
+  </script>
+</body>
+</html>

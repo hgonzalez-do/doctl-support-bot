@@ -1,0 +1,68 @@
+{
+  "source_repo": "digitalocean/doctl",
+  "generated_at": "2026-09-17T19:29:17+00:00",
+  "latest": "v1.168.0",
+  "release_count": 6,
+  "releases": [
+    {
+      "tag": "v1.168.0",
+      "name": "v1.168.0",
+      "published_at": "2026-08-31T13:19:55Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.168.0",
+      "summary": "doctl v1.168.0 was published on 2026-08-31 and includes 2 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.168.0.md",
+      "change_count": 2
+    },
+    {
+      "tag": "v1.167.0",
+      "name": "v1.167.0",
+      "published_at": "2026-08-18T06:41:45Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.167.0",
+      "summary": "doctl v1.167.0 was published on 2026-08-18 and includes 1 change. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.167.0.md",
+      "change_count": 1
+    },
+    {
+      "tag": "v1.166.0",
+      "name": "v1.166.0",
+      "published_at": "2026-07-31T16:29:19Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.166.0",
+      "summary": "doctl v1.166.0 was published on 2026-07-31 and includes 3 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.166.0.md",
+      "change_count": 3
+    },
+    {
+      "tag": "v1.165.0",
+      "name": "v1.165.0",
+      "published_at": "2026-07-30T13:39:22Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.165.0",
+      "summary": "doctl v1.165.0 was published on 2026-07-30 and includes 5 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.165.0.md",
+      "change_count": 5
+    },
+    {
+      "tag": "v1.164.0",
+      "name": "v1.164.0",
+      "published_at": "2026-07-23T13:24:30Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.164.0",
+      "summary": "doctl v1.164.0 was published on 2026-07-23 and includes 7 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.164.0.md",
+      "change_count": 7
+    },
+    {
+      "tag": "v1.163.0",
+      "name": "v1.163.0",
+      "published_at": "2026-06-25T11:31:09Z",
+      "prerelease": false,
+      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.163.0",
+      "summary": "doctl v1.163.0 was published on 2026-06-25 and includes 1 change. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
+      "doc": "docs/releases/v1.163.0.md",
+      "change_count": 1
+    }
+  ]
+}
