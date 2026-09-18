@@ -6,12 +6,11 @@ knowledge base which is kept current automatically.
 - **Retrieval:** DigitalOcean Gradient Knowledge Base (hybrid lexical + semantic search over `docs/`).
 - **Generation:** DigitalOcean Serverless Inference (OpenAI-compatible, any catalog model).
 - **Hosting:** DigitalOcean App Platform (deploys on push from this repo).
-- **Curation:** a DigitalOcean Managed Agent (Claude Code) on a weekly cron reads new doctl
-  release notes, updates `docs/`, regenerates the release index, pushes, syncs to Spaces and
-  re-indexes the knowledge base.
-
-Deployment scripts, the agent spec and the demo walkthrough live in the companion repo
-[managed-agents-kb-curator-demo](https://github.com/hgonzalez-do/managed-agents-kb-curator-demo).
+- **Curation:** a DigitalOcean Managed Agent on a weekly cron reads new doctl release notes,
+  updates `docs/` in this repo, regenerates the release index, pushes, syncs to Spaces and
+  re-indexes the knowledge base. The agent's tooling, spec and runbook live in the companion
+  repo [managed-agents-kb-curator-demo](https://github.com/hgonzalez-do/managed-agents-kb-curator-demo);
+  this repo is only the App Platform app plus the docs it answers from.
 
 ## Run locally
 
@@ -48,11 +47,7 @@ No dependencies: Node 20+ and the standard library only.
 ```
 server.js                     HTTP server: static UI + /api/* (retrieve → inference)
 public/index.html             Chat UI
-docs/                         The knowledge base content (see docs/README.md)
-curator/                      tooling run by the Managed Agent, never by the app (see curator/README.md)
-  releases.py                   fetch | bootstrap | index | rewind release docs
-  sync-docs-to-spaces.sh        docs/ → Spaces bucket
-  reindex-kb.sh                 start + wait for a KB indexing job
+docs/                         The knowledge base content, maintained by the agent (see docs/README.md)
 ```
 
 ## How a request flows
