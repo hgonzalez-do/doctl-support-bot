@@ -40,6 +40,7 @@ No dependencies: Node 20+ and the standard library only.
 | `MODEL_ACCESS_KEY` | yes | Serverless Inference model access key. |
 | `INFERENCE_MODEL` | no | Chat model ID, default `anthropic-claude-haiku-4.5`. |
 | `KB_NUM_RESULTS` / `KB_ALPHA` | no | Retrieval depth (default 6) and lexical/semantic balance (default 0.5). |
+| `RELEASE_INDEX_URL` | no | Raw URL of `docs/release-index.json` on GitHub; when set, `/api/releases` serves it live (60 s cache) instead of the copy baked into the deploy. |
 | `PORT` | no | Default 8080. |
 
 ## Layout

@@ -28,6 +28,9 @@ const cfg = {
   kbBaseUrl: (process.env.KB_RETRIEVE_BASE_URL || "https://kbaas.do-ai.run").replace(/\/$/, ""),
   numResults: Number(process.env.KB_NUM_RESULTS || 6),
   alpha: Number(process.env.KB_ALPHA || 0.5),
+  // Optional: fetch the release index from GitHub (raw URL) so the "docs current through"
+  // badge updates as soon as the curator pushes, without waiting for a redeploy.
+  releaseIndexUrl: process.env.RELEASE_INDEX_URL || "",
 };
 
 const SYSTEM_PROMPT = `You are the doctl support assistant. doctl is DigitalOcean's command-line tool.
@@ -142,7 +145,23 @@ async function handleChat(body) {
   };
 }
 
+let releaseIndexCache = { at: 0, json: null };
+
 async function handleReleases() {
+  if (cfg.releaseIndexUrl) {
+    if (Date.now() - releaseIndexCache.at < 60_000 && releaseIndexCache.json) {
+      return { status: 200, json: releaseIndexCache.json };
+    }
+    try {
+      const res = await fetch(cfg.releaseIndexUrl, { headers: { "Cache-Control": "no-cache" } });
+      if (res.ok) {
+        releaseIndexCache = { at: Date.now(), json: await res.json() };
+        return { status: 200, json: releaseIndexCache.json };
+      }
+    } catch (err) {
+      console.warn(`release index fetch failed, using local copy: ${err.message}`);
+    }
+  }
   try {
     const raw = await readFile(path.join(DOCS_DIR, "release-index.json"), "utf8");
     return { status: 200, json: JSON.parse(raw) };
