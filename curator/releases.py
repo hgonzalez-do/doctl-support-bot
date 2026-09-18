@@ -123,11 +123,12 @@ def parse_release_doc(path):
     return fm
 
 
-def write_release_doc(rel, summary=None):
+def write_release_doc(rel):
+    """Deterministic page used by `bootstrap`; the agent writes richer pages for new releases."""
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     date = (rel["published_at"] or "")[:10]
     n = len(rel["changes"])
-    summary = summary or (
+    summary = (
         f"doctl {rel['tag']} was published on {date} and includes {n} change{'s' if n != 1 else ''}. "
         f"This summary was generated automatically during bootstrap; the curator agent writes "
         f"human-readable summaries for new releases."

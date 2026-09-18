@@ -29,7 +29,7 @@ const cfg = {
   numResults: Number(process.env.KB_NUM_RESULTS || 6),
   alpha: Number(process.env.KB_ALPHA || 0.5),
   // Optional: fetch the release index from GitHub (raw URL) so the "docs current through"
-  // badge updates as soon as the curator pushes, without waiting for a redeploy.
+  // badge reflects the curator's latest push immediately.
   releaseIndexUrl: process.env.RELEASE_INDEX_URL || "",
 };
 
@@ -66,7 +66,6 @@ async function retrieveFromKnowledgeBase(query) {
   return (data.results || []).map((r) => ({
     text: r.text_content || r.text || "",
     item_name: r.metadata?.item_name || "unknown",
-    score: r.score ?? r.metadata?.score ?? null,
   }));
 }
 
