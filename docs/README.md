@@ -13,9 +13,9 @@ Layout:
 
 How it is maintained:
 
-1. The curator agent runs `scripts/releases.py fetch` to find releases newer than the bookmark.
+1. The curator agent runs `curator/releases.py fetch` to find releases newer than the bookmark.
 2. It writes a `releases/<tag>.md` page per new release with a human-readable summary.
-3. It runs `scripts/releases.py index` to regenerate `changelog.md`, `release-index.json` and the bookmark.
+3. It runs `curator/releases.py index` to regenerate `changelog.md`, `release-index.json` and the bookmark.
 4. It commits and pushes, syncs this folder to Spaces, and triggers a knowledge-base re-index.
 
 Source of truth: https://github.com/digitalocean/doctl/releases

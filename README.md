@@ -49,9 +49,10 @@ No dependencies: Node 20+ and the standard library only.
 server.js                     HTTP server: static UI + /api/* (retrieve → inference)
 public/index.html             Chat UI
 docs/                         The knowledge base content (see docs/README.md)
-scripts/releases.py           fetch | bootstrap | index | rewind release docs
-scripts/sync-docs-to-spaces.sh  docs/ → Spaces bucket (agent step)
-scripts/reindex-kb.sh           start + wait for a KB indexing job (agent step)
+curator/                      tooling run by the Managed Agent, never by the app (see curator/README.md)
+  releases.py                   fetch | bootstrap | index | rewind release docs
+  sync-docs-to-spaces.sh        docs/ → Spaces bucket
+  reindex-kb.sh                 start + wait for a KB indexing job
 ```
 
 ## How a request flows
