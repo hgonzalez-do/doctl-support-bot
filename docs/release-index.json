@@ -1,19 +1,9 @@
 {
   "source_repo": "digitalocean/doctl",
-  "generated_at": "2026-09-17T19:29:17+00:00",
-  "latest": "v1.168.0",
-  "release_count": 6,
+  "generated_at": "2026-09-18T02:21:07+00:00",
+  "latest": "v1.167.0",
+  "release_count": 5,
   "releases": [
-    {
-      "tag": "v1.168.0",
-      "name": "v1.168.0",
-      "published_at": "2026-08-31T13:19:55Z",
-      "prerelease": false,
-      "url": "https://github.com/digitalocean/doctl/releases/tag/v1.168.0",
-      "summary": "doctl v1.168.0 was published on 2026-08-31 and includes 2 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.",
-      "doc": "docs/releases/v1.168.0.md",
-      "change_count": 2
-    },
     {
       "tag": "v1.167.0",
       "name": "v1.167.0",

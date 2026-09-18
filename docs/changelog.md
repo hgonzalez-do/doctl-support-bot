@@ -2,12 +2,6 @@
 
 Curated from https://github.com/digitalocean/doctl/releases. Newest first. Each entry links to a detailed release page.
 
-## v1.168.0 — 2026-08-31
-
-doctl v1.168.0 was published on 2026-08-31 and includes 2 changes. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.
-
-Details: [docs/releases/v1.168.0.md](releases/v1.168.0.md) · [GitHub release](https://github.com/digitalocean/doctl/releases/tag/v1.168.0)
-
 ## v1.167.0 — 2026-08-18
 
 doctl v1.167.0 was published on 2026-08-18 and includes 1 change. This summary was generated automatically during bootstrap; the curator agent writes human-readable summaries for new releases.
