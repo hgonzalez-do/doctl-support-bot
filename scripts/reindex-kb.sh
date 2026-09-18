@@ -34,7 +34,7 @@ while :; do
   status="$(printf '%s' "$status_json" | python3 -c 'import json,sys; d=json.load(sys.stdin).get("job",{}); print(d.get("status",""), d.get("phase",""))')"
   echo "  $(date -u +%H:%M:%S) $status"
   case "$status" in
-    *COMPLETED*) echo "Indexing finished."; exit 0 ;;
+    *COMPLETED*|*NO_CHANGES*|*PHASE_SUCCEEDED*) echo "Indexing finished."; exit 0 ;;
     *FAILED*|*CANCEL*) echo "Indexing did not complete: $status"; echo "$status_json"; exit 1 ;;
   esac
   if [ $(( $(date +%s) - start )) -ge "$TIMEOUT" ]; then
