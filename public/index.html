@@ -20,8 +20,6 @@
     .msg { padding:14px 16px; border-radius:12px; max-width: 85%; white-space:pre-wrap; word-wrap:break-word; }
     .user { align-self:flex-end; background:var(--accent); color:#fff; }
     .bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
-    .bot .sources { margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:12px; color:var(--muted); }
-    .bot .sources span { display:inline-block; background:#0e1730; border:1px solid var(--line); border-radius:6px; padding:2px 8px; margin:2px 4px 2px 0; }
     .bot .timing { margin-top:6px; font-size:11px; color:var(--muted); }
     .err { border-color:#d14343; color:#ffb4b4; }
     form { display:flex; gap:8px; margin-top:20px; }
@@ -62,17 +60,10 @@
       const el = document.createElement("div");
       el.className = "msg " + role + (extra && extra.error ? " err" : "");
       el.textContent = text;
-      if (extra && extra.sources && extra.sources.length) {
-        const s = document.createElement("div");
-        s.className = "sources";
-        s.append("Sources: ");
-        extra.sources.forEach(src => { const b = document.createElement("span"); b.textContent = src.item_name; b.title = src.snippet; s.appendChild(b); });
-        el.appendChild(s);
-      }
       if (extra && extra.timing_ms) {
         const t = document.createElement("div");
         t.className = "timing";
-        t.textContent = `${extra.model} · retrieve ${extra.timing_ms.retrieve} ms · total ${extra.timing_ms.total} ms`;
+        t.textContent = `${extra.model} · ${extra.timing_ms.total} ms`;
         el.appendChild(t);
       }
       log.appendChild(el);

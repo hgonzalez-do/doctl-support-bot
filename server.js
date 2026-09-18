@@ -1,11 +1,13 @@
 // doctl Support Bot — runs on DigitalOcean App Platform.
 //
-// Request flow for POST /api/chat:
-//   1. Retrieve the most relevant chunks from a Gradient Knowledge Base
-//      (POST https://kbaas.do-ai.run/v1/<KB_UUID>/retrieve).
-//   2. Ask a model on DigitalOcean Serverless Inference to answer using only
-//      those chunks (POST https://inference.do-ai.run/v1/chat/completions).
-//   3. Return the answer plus the source documents that were used.
+// Request flow for POST /api/chat: one call to a Gradient AI agent endpoint
+// (POST <AGENT_ENDPOINT>/api/v1/chat/completions). The agent owns the knowledge base and
+// does retrieval and generation on its side, so this service holds a single credential —
+// that agent's access key — and no DigitalOcean API token at all.
+//
+// The assistant's persona and answering rules live in the agent's instruction
+// (chat-agent/instruction.md in the curator repo), not here: changing how it answers is an
+// agent update, not a redeploy.
 //
 // Node stdlib only — no npm install needed.
 
@@ -20,69 +22,43 @@ const DOCS_DIR = path.join(__dirname, "docs");
 
 const cfg = {
   port: Number(process.env.PORT || 8080),
-  doApiToken: process.env.DO_API_TOKEN || "",
-  kbUuid: process.env.KB_UUID || "",
-  modelAccessKey: process.env.MODEL_ACCESS_KEY || "",
-  model: process.env.INFERENCE_MODEL || "llama-4-maverick",
-  inferenceBaseUrl: (process.env.INFERENCE_BASE_URL || "https://inference.do-ai.run").replace(/\/$/, ""),
-  kbBaseUrl: (process.env.KB_RETRIEVE_BASE_URL || "https://kbaas.do-ai.run").replace(/\/$/, ""),
-  numResults: Number(process.env.KB_NUM_RESULTS || 6),
-  alpha: Number(process.env.KB_ALPHA || 0.5),
+  // e.g. https://<id>.agents.do-ai.run — `deployment.url` of the Gradient agent.
+  agentEndpoint: (process.env.AGENT_ENDPOINT || "").replace(/\/$/, ""),
+  // Scoped to that one agent. Not a dop_/doo_ DigitalOcean token and not interchangeable with one.
+  agentAccessKey: process.env.AGENT_ACCESS_KEY || "",
+  model: process.env.AGENT_MODEL || "llama-4-maverick",
+  maxTokens: Number(process.env.AGENT_MAX_TOKENS || 800),
   // Optional: fetch the release index from GitHub (raw URL) so the "docs current through"
-  // badge reflects the curator's latest push immediately.
+  // badge reflects the curator's latest push immediately. The app is not redeployed when the
+  // curator pushes, so the docs/ copy on disk is a snapshot from deploy time; this URL is how
+  // the badge stays current. Answers never come from either — only from the knowledge base.
   releaseIndexUrl: process.env.RELEASE_INDEX_URL || "",
 };
 
-const SYSTEM_PROMPT = `You are the doctl support assistant. doctl is DigitalOcean's command-line tool.
-Answer the user's question using ONLY the context documents provided. The context comes from
-release notes and docs curated from https://github.com/digitalocean/doctl/releases.
-
-Rules:
-- Be concise and specific. Mention version numbers (tags) and dates when relevant.
-- When you use a document, cite it inline like [source: <item_name>].
-- If the context does not contain the answer, say so plainly and point the user to
-  https://docs.digitalocean.com/reference/doctl/ . Never invent versions, flags, or dates.`;
-
 // ---------------------------------------------------------------------------
-// DigitalOcean calls
+// Gradient agent endpoint
 // ---------------------------------------------------------------------------
 
-async function retrieveFromKnowledgeBase(query) {
-  if (!cfg.doApiToken || !cfg.kbUuid) {
-    throw new Error("Server is missing DO_API_TOKEN or KB_UUID");
+async function askAgent(messages) {
+  if (!cfg.agentEndpoint || !cfg.agentAccessKey) {
+    throw new Error("Server is missing AGENT_ENDPOINT or AGENT_ACCESS_KEY");
   }
-  const res = await fetch(`${cfg.kbBaseUrl}/v1/${cfg.kbUuid}/retrieve`, {
+  const res = await fetch(`${cfg.agentEndpoint}/api/v1/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.doApiToken}`,
+      Authorization: `Bearer ${cfg.agentAccessKey}`,
     },
-    body: JSON.stringify({ query, num_results: cfg.numResults, alpha: cfg.alpha }),
+    body: JSON.stringify({
+      model: cfg.model,
+      messages,
+      stream: false,
+      temperature: 0.2,
+      max_tokens: cfg.maxTokens,
+    }),
   });
   if (!res.ok) {
-    throw new Error(`Knowledge base retrieve failed: ${res.status} ${await res.text()}`);
-  }
-  const data = await res.json();
-  return (data.results || []).map((r) => ({
-    text: r.text_content || r.text || "",
-    item_name: r.metadata?.item_name || "unknown",
-  }));
-}
-
-async function chatCompletion(messages) {
-  if (!cfg.modelAccessKey) {
-    throw new Error("Server is missing MODEL_ACCESS_KEY");
-  }
-  const res = await fetch(`${cfg.inferenceBaseUrl}/v1/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.modelAccessKey}`,
-    },
-    body: JSON.stringify({ model: cfg.model, messages, temperature: 0.2, max_tokens: 800 }),
-  });
-  if (!res.ok) {
-    throw new Error(`Serverless Inference failed: ${res.status} ${await res.text()}`);
+    throw new Error(`Agent endpoint failed: ${res.status} ${await res.text()}`);
   }
   const data = await res.json();
   return {
@@ -95,12 +71,6 @@ async function chatCompletion(messages) {
 // Handlers
 // ---------------------------------------------------------------------------
 
-function buildContext(chunks) {
-  return chunks
-    .map((c, i) => `--- Document ${i + 1} (item_name: ${c.item_name}) ---\n${c.text}`)
-    .join("\n\n");
-}
-
 async function handleChat(body) {
   const message = String(body.message || "").trim();
   if (!message) return { status: 400, json: { error: "message is required" } };
@@ -108,38 +78,20 @@ async function handleChat(body) {
   const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
   const started = Date.now();
 
-  const chunks = await retrieveFromKnowledgeBase(message);
-  const retrieveMs = Date.now() - started;
-
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
+  // No system message: the agent carries its own instruction. Retrieval happens inside the
+  // agent, and the retrieved documents are deliberately not surfaced to the caller.
+  const answer = await askAgent([
     ...history.filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content),
-    {
-      role: "user",
-      content: `Context documents:\n\n${buildContext(chunks) || "(no documents found)"}\n\nQuestion: ${message}`,
-    },
-  ];
-
-  const answer = await chatCompletion(messages);
-  const totalMs = Date.now() - started;
-
-  // De-duplicate sources by item_name, keep a short snippet for the UI.
-  const seen = new Set();
-  const sources = [];
-  for (const c of chunks) {
-    if (seen.has(c.item_name)) continue;
-    seen.add(c.item_name);
-    sources.push({ item_name: c.item_name, snippet: c.text.slice(0, 240) });
-  }
+    { role: "user", content: message },
+  ]);
 
   return {
     status: 200,
     json: {
       answer: answer.text,
-      sources,
       model: cfg.model,
       usage: answer.usage,
-      timing_ms: { retrieve: retrieveMs, total: totalMs },
+      timing_ms: { total: Date.now() - started },
     },
   };
 }
@@ -158,7 +110,7 @@ async function handleReleases() {
         return { status: 200, json: releaseIndexCache.json };
       }
     } catch (err) {
-      console.warn(`release index fetch failed, using local copy: ${err.message}`);
+      console.warn(`release index fetch failed, using deploy-time copy (may be stale): ${err.message}`);
     }
   }
   try {
@@ -175,8 +127,7 @@ function handleHealth() {
     json: {
       ok: true,
       model: cfg.model,
-      knowledge_base_configured: Boolean(cfg.kbUuid && cfg.doApiToken),
-      inference_configured: Boolean(cfg.modelAccessKey),
+      agent_endpoint_configured: Boolean(cfg.agentEndpoint && cfg.agentAccessKey),
     },
   };
 }
@@ -237,5 +188,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(cfg.port, () => {
-  console.log(`doctl-support-bot listening on :${cfg.port} (model=${cfg.model}, kb=${cfg.kbUuid ? "set" : "MISSING"})`);
+  console.log(`doctl-support-bot listening on :${cfg.port} (model=${cfg.model}, agent endpoint=${cfg.agentEndpoint || "MISSING"})`);
 });
