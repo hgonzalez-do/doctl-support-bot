@@ -38,7 +38,7 @@ No dependencies: Node 20+ and the standard library only.
 | `DO_API_TOKEN` | yes | DO API token with the **GenAI read** scope. Used for knowledge-base retrieval only. |
 | `KB_UUID` | yes | Gradient Knowledge Base UUID. |
 | `MODEL_ACCESS_KEY` | yes | Serverless Inference model access key. |
-| `INFERENCE_MODEL` | no | Chat model ID, default `anthropic-claude-haiku-4.5`. |
+| `INFERENCE_MODEL` | no | Chat model ID, default `llama-4-maverick` (any DO-hosted catalog model). |
 | `KB_NUM_RESULTS` / `KB_ALPHA` | no | Retrieval depth (default 6) and lexical/semantic balance (default 0.5). |
 | `RELEASE_INDEX_URL` | no | Raw URL of `docs/release-index.json` on GitHub; when set, `/api/releases` serves it live (60 s cache) instead of the copy baked into the deploy. |
 | `PORT` | no | Default 8080. |

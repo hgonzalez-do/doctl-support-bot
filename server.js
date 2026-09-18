@@ -23,7 +23,7 @@ const cfg = {
   doApiToken: process.env.DO_API_TOKEN || "",
   kbUuid: process.env.KB_UUID || "",
   modelAccessKey: process.env.MODEL_ACCESS_KEY || "",
-  model: process.env.INFERENCE_MODEL || "anthropic-claude-haiku-4.5",
+  model: process.env.INFERENCE_MODEL || "llama-4-maverick",
   inferenceBaseUrl: (process.env.INFERENCE_BASE_URL || "https://inference.do-ai.run").replace(/\/$/, ""),
   kbBaseUrl: (process.env.KB_RETRIEVE_BASE_URL || "https://kbaas.do-ai.run").replace(/\/$/, ""),
   numResults: Number(process.env.KB_NUM_RESULTS || 6),
